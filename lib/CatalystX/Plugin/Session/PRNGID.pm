@@ -7,7 +7,7 @@ use Math::Random::ISAAC;
 
 =head1 NAME
 
-CatalystX::Plugin::Session::PRNGID - The great new CatalystX::Plugin::Session::PRNGID!
+CatalystX::Plugin::Session::PRNGID - More random Session id generation
 
 =head1 VERSION
 
@@ -28,17 +28,15 @@ sub _build_prng
 =head1 SYNOPSIS
 
 An extension to Catalyst::Plugin::Session to use a more PRNG for the random 
-numbers in the session id's.
+numbers in the session id's.  Use this module in your list of plugins instead
+of the Session plugin.  It inherits from it and overrides some of the id 
+generation methods.
 
     use Catalyst qw/
-        Session
+        +CatalystX::Plugin::Session::PRNGID
         Session::Store::FastMmap
         Session::State::Cookie
-        +CatalystX::Plugin::Session::PRNGID
     /;
-
-Note that this module should be loaded *after* the Session plugin. 
-It overrides one of the Session plugins methods.
 
 =head1 METHODS
 
@@ -62,6 +60,8 @@ override session_hash_seed => sub
 {
     my $c = shift;
 
+    # this is essentially the same as the existing plugin, just
+    # using a prng instead of rand.
     return join( "", ++$counter, time, $c->prng->rand, $$, {}, overload::StrVal($c), );
 };
 

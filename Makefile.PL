@@ -13,24 +13,26 @@ perl_version 5.006;
 tests_recursive('t');
 
 resources (
-   #homepage   => 'http://yourwebsitehere.com',
-   #IRC        => 'irc://irc.perl.org/#CatalystX-Plugin-Session-PRNGID',
+   homepage   => 'http://github.com/colinnewell/CatalystX-Plugin-Session-PRNGID',
+   IRC        => 'irc://irc.perl.org/#catalyst',
    license    => 'http://www.perlfoundation.org/artistic_license_2_0',
-   #repository => 'git://github.com/Colin Newell/CatalystX-Plugin-Session-PRNGID.git',
+   repository => 'git://github.com/colinnewell/CatalystX-Plugin-Session-PRNGID.git',
    bugtracker => 'http://rt.cpan.org/NoAuth/Bugs.html?Dist=CatalystX-Plugin-Session-PRNGID',
 );
 
 configure_requires (
-   'Module::Install' => 0,
+    'Module::Install' => 0,
 );
 
 build_requires (
-   'Test::More' => 0,
+    'Test::More' => 0,
+    'Catalyst::Plugin::Session::Store::FastMmap' => 0,
+    'Catalyst::Plugin::Session::State::Cookie' => 0,
 );
 
 requires (
-   #'ABC'              => 1.6,
-   #'Foo::Bar::Module' => 5.0401,
+    'Catalyst::Plugin::Session' => 0,
+    'Math::Random::ISAAC' => 0,
 );
 
 install_as_cpan;
