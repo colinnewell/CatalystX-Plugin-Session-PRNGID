@@ -2,7 +2,7 @@ CatalystX-Plugin-Session-PRNGID
 
 This module attempts to make the session id's used by Catalyst::Plugin::Session
 a little more secure by generating them with the help of a PRNG rather
-than rand.
+than rand.  It also generates more random bits to boost the entropy.
 
 INSTALLATION
 
