@@ -3,7 +3,6 @@ package CatalystX::Plugin::Session::PRNGID;
 use Moose;
 extends 'Catalyst::Plugin::Session';
 use namespace::clean -except => 'meta';
-use Math::Random::ISAAC;
 
 =head1 NAME
 
@@ -23,6 +22,7 @@ has iterations => (is => 'ro', default => 16);
 sub _build_prng
 {
     my $self = shift;
+    require Math::Random::ISAAC;
     return Math::Random::ISAAC->new(rand, localtime);
 }
 
