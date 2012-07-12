@@ -18,6 +18,7 @@ Version 0.01
 our $VERSION = '0.01';
 
 has prng => (is => 'ro', lazy => 1, builder => '_build_prng');
+has iterations => (is => 'ro', default => 16);
 
 sub _build_prng
 {
@@ -28,9 +29,9 @@ sub _build_prng
 =head1 SYNOPSIS
 
 An extension to Catalyst::Plugin::Session to use a more PRNG for the random 
-numbers in the session id's.  Use this module in your list of plugins instead
-of the Session plugin.  It inherits from it and overrides some of the id 
-generation methods.
+numbers in the session id's, and generate more entropy.  Use this module in 
+your list of plugins instead of the Session plugin.  It inherits from it 
+and overrides some of the id generation methods.
 
     use Catalyst qw/
         +CatalystX::Plugin::Session::PRNGID
@@ -38,7 +39,26 @@ generation methods.
         Session::State::Cookie
     /;
 
+The default Session id generation looks good when you look at the resulting 
+id because it is hashed.  If you look at the source data that generates it
+however it doesn't have very high entropy.  Using the burp sequencer suggests
+that the raw data has an entropy of 13 bits, which it rates as poor.
+
+This plugin uses a PRNG and generates several random numbers, to get more
+bits of randomness to insert into the id before hashing.  The PRNG used is the 
+ISAAC PRNG.  Primarily because I could find a module for it on CPAN and it 
+doesn't appear to have any major vulnerabilities, at least at the time of 
+constructing this module.  The PRNG is quick so it shouldn't impact your 
+sites performance.
+
 =head1 METHODS
+
+=head2 iterations
+
+The number of iterations is the number of times it generates a random number
+to put in the session id.  The more times we do that the more entropy we 
+generate.  This defaults to 16.  The PRNG is fast so this shouldn't be too
+taxing.
 
 =head2 prng
 
@@ -62,7 +82,14 @@ override session_hash_seed => sub
 
     # this is essentially the same as the existing plugin, just
     # using a prng instead of rand.
-    return join( "", ++$counter, time, $c->prng->rand, $$, {}, overload::StrVal($c), );
+    # the idea being to drive up the entropy before we push it through the
+    # hash.
+    my @bits = ( ++$counter, time, $c->prng->rand, $$, {}, overload::StrVal($c), );
+    for (my $i = 0; $i < $c->iterations; $i++)
+    {
+        push @bits, $c->prng->rand;
+    }
+    return join "", @bits;
 };
 
 =head1 AUTHOR
