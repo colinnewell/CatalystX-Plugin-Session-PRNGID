@@ -2,6 +2,7 @@ package CatalystX::Plugin::Session::PRNGID;
 
 use Moose;
 extends 'Catalyst::Plugin::Session';
+with 'Catalyst::ClassData';
 use namespace::clean -except => 'meta';
 
 =head1 NAME
@@ -16,16 +17,18 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-has prng => (is => 'ro', lazy => 1, builder => '_build_prng');
-has iterations => (is => 'ro', default => 16, isa => 'Int');
-has random_device => (is => 'ro', isa => 'Str', default => '/dev/random');
 
-sub _build_prng
+__PACKAGE__->mk_classdata('prng');
+__PACKAGE__->mk_classdata('iterations', 16);
+__PACKAGE__->mk_classdata('random_device', '/dev/random');
+    
+
+sub setup_finalize 
 {
-    my $self = shift;
+    my $app = shift;
     require Math::Random::ISAAC;
-    return Math::Random::ISAAC->new($self->generate_seed);
-}
+    $app->prng(Math::Random::ISAAC->new($app->generate_seed));
+};
 
 sub generate_seed
 {
@@ -101,6 +104,10 @@ PRNG instead of rand.  This gives a reasonable promise of unpredictable random
 numbers, rather than numbers that should be evenly distributed over the range 
 of possible numbers.  
 
+=head2 setup_finalize
+
+This initialises the prng at application startup.
+
 =cut
 
 my $counter;
@@ -109,9 +116,7 @@ override session_hash_seed => sub
     my $c = shift;
 
     # this is essentially the same as the existing plugin, just
-    # using a prng instead of rand.
-    # the idea being to drive up the entropy before we push it through the
-    # hash.
+    # using a prng instead of rand and running it a few more times.
     my @bits = ( ++$counter, time, $c->prng->rand, $$, {}, overload::StrVal($c), );
     for (my $i = 0; $i < $c->iterations; $i++)
     {
