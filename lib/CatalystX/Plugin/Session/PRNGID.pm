@@ -18,7 +18,7 @@ our $VERSION = '0.01';
 
 has prng => (is => 'ro', lazy => 1, builder => '_build_prng');
 has iterations => (is => 'ro', default => 16, isa => 'Int');
-has random_device => (is => 'ro', isa => 'Str', default => '/dev/urandom');
+has random_device => (is => 'ro', isa => 'Str', default => '/dev/random');
 
 sub _build_prng
 {
@@ -43,7 +43,7 @@ sub generate_seed
 =head1 SYNOPSIS
 
 An extension to Catalyst::Plugin::Session to use a PRNG for the random 
-numbers in the session id's and seed it from /dev/urandom.  Use this 
+numbers in the session id's and seed it from /dev/random.  Use this 
 module in your list of plugins instead of the Session plugin.  It inherits 
 from it and overrides some of the id generation methods.
 
@@ -76,7 +76,7 @@ shouldn't be too taxing.
 =head2 random_device
 
 This is the device used for the random seed for the PRNG.  This will be used
-at startup by every catalyst process you have.  It defaults to /dev/urandom.
+at startup by every catalyst process you have.  It defaults to /dev/random.
 
 If you don't have a device (i.e. not on a *nix system) look to override 
 the L<generate_seed> method.
@@ -89,7 +89,7 @@ you can replace the PRNG.
 
 =head2 generate_seed
 
-This method generates the seed for the PRNG.  This reads from /dev/urandom
+This method generates the seed for the PRNG.  This reads from /dev/random
 which won't work for non *nix boxes.  Override this to use a different source
 of randomness.  Just remember that the PRNG is only as secure as the randomness
 for the seed.  For more security use /dev/random.
