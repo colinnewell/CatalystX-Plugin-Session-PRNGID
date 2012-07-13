@@ -17,7 +17,7 @@ Version 0.01
 our $VERSION = '0.01';
 
 has prng => (is => 'ro', lazy => 1, builder => '_build_prng');
-has iterations => (is => 'ro', default => 16);
+has iterations => (is => 'ro', default => 16, isa => 'Int');
 
 sub _build_prng
 {
