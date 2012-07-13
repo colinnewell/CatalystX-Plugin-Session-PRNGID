@@ -23,7 +23,7 @@ sub _build_prng
 {
     my $self = shift;
     require Math::Random::ISAAC;
-    return Math::Random::ISAAC->new(rand, localtime);
+    return Math::Random::ISAAC->new(rand, localtime, $$);
 }
 
 =head1 SYNOPSIS
