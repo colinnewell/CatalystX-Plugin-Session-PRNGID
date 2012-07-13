@@ -28,10 +28,11 @@ sub _build_prng
 
 =head1 SYNOPSIS
 
-An extension to Catalyst::Plugin::Session to use a more PRNG for the random 
-numbers in the session id's, and generate more entropy.  Use this module in 
-your list of plugins instead of the Session plugin.  It inherits from it 
-and overrides some of the id generation methods.
+An extension to Catalyst::Plugin::Session to use a PRNG for the random 
+numbers in the session id's, and use more bits of randomness from it to 
+provide more entropy.  Use this module in your list of plugins instead 
+of the Session plugin.  It inherits from it and overrides some of the 
+id generation methods.
 
     use Catalyst qw/
         +CatalystX::Plugin::Session::PRNGID
