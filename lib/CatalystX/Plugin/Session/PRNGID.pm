@@ -18,21 +18,34 @@ our $VERSION = '0.01';
 
 has prng => (is => 'ro', lazy => 1, builder => '_build_prng');
 has iterations => (is => 'ro', default => 16, isa => 'Int');
+has random_device => (is => 'ro', isa => 'Str', default => '/dev/urandom');
 
 sub _build_prng
 {
     my $self = shift;
     require Math::Random::ISAAC;
-    return Math::Random::ISAAC->new(rand, localtime, $$);
+    return Math::Random::ISAAC->new($self->generate_seed);
 }
+
+sub generate_seed
+{
+    my $self = shift;
+
+    open my $fh, "<", $self->random_device;
+    read $fh, my $bytes, 20;
+    close $fh;
+    # is this really the best format for the seed numbers?
+    # should I split it into chunks for the generator?
+    return unpack("I*", $bytes);
+}
+
 
 =head1 SYNOPSIS
 
 An extension to Catalyst::Plugin::Session to use a PRNG for the random 
-numbers in the session id's, and use more bits of randomness from it to 
-provide more entropy.  Use this module in your list of plugins instead 
-of the Session plugin.  It inherits from it and overrides some of the 
-id generation methods.
+numbers in the session id's and seed it from /dev/urandom.  Use this 
+module in your list of plugins instead of the Session plugin.  It inherits 
+from it and overrides some of the id generation methods.
 
     use Catalyst qw/
         +CatalystX::Plugin::Session::PRNGID
@@ -57,15 +70,29 @@ sites performance.
 =head2 iterations
 
 The number of iterations is the number of times it generates a random number
-to put in the session id.  The more times we do that the more entropy we 
-generate.  This defaults to 16.  The PRNG is fast so this shouldn't be too
-taxing.
+to put in the session id.  This defaults to 16.  The PRNG is fast so this 
+shouldn't be too taxing.
+
+=head2 random_device
+
+This is the device used for the random seed for the PRNG.  This will be used
+at startup by every catalyst process you have.  It defaults to /dev/urandom.
+
+If you don't have a device (i.e. not on a *nix system) look to override 
+the L<generate_seed> method.
 
 =head2 prng
 
 This is the PRNG for use in the session hash seed.  This is initialised with a 
 Math::Random::ISAAC object.  If you provide an alternative on construction
 you can replace the PRNG.  
+
+=head2 generate_seed
+
+This method generates the seed for the PRNG.  This reads from /dev/urandom
+which won't work for non *nix boxes.  Override this to use a different source
+of randomness.  Just remember that the PRNG is only as secure as the randomness
+for the seed.  For more security use /dev/random.
 
 =head2 session_hash_seed
 
@@ -98,12 +125,6 @@ override session_hash_seed => sub
 Colin Newell, C<< <colin.newell at gmail.com> >>
 
 =head1 BUGS
-
-I'm not entirely sure whether this is the best approach to generating the session
-id's as perversely the hashing of the random number may actually remove some of
-the randomness.  This module is hopefully solving the 'rand' not being the right
-sort of random problem, it doesn't try to alter the fundamental way the session
-id is then generated.
 
 You probably want to install Math::Random::ISAAC::XS, it's not explicitly in the 
 dependencies because I'm not sure that it will install on all platforms.  It's the
