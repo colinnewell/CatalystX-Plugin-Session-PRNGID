@@ -56,11 +56,6 @@ from it and overrides some of the id generation methods.
         Session::State::Cookie
     /;
 
-The default Session id generation looks good when you look at the resulting 
-id because it is hashed.  If you look at the source data that generates it
-however it doesn't have very high entropy.  Using the burp sequencer suggests
-that the raw data has an entropy of 13 bits, which it rates as poor.
-
 This plugin uses a PRNG and generates several random numbers, to get more
 bits of randomness to insert into the id before hashing.  The PRNG used is the 
 ISAAC PRNG.  Primarily because I could find a module for it on CPAN and it 
