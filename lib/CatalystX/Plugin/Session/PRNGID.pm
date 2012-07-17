@@ -20,25 +20,31 @@ our $VERSION = '0.01';
 
 __PACKAGE__->mk_classdata('prng');
 __PACKAGE__->mk_classdata('iterations', 16);
+__PACKAGE__->mk_classdata('reseed_count', 100000); # this value wasn't derived scientifically.
+__PACKAGE__->mk_classdata('seed_count', 0); # this value wasn't derived scientifically.
 __PACKAGE__->mk_classdata('random_device', '/dev/random');
     
 
 sub setup_finalize 
 {
     my $app = shift;
+    $app->setup_prng;
+};
+
+sub setup_prng
+{
+    my $app = shift;
     require Math::Random::ISAAC;
     $app->prng(Math::Random::ISAAC->new($app->generate_seed));
-};
+}
 
 sub generate_seed
 {
-    my $self = shift;
+    my $app = shift;
 
-    open my $fh, "<", $self->random_device;
+    open my $fh, "<", $app->random_device;
     read $fh, my $bytes, 20;
     close $fh;
-    # is this really the best format for the seed numbers?
-    # should I split it into chunks for the generator?
     return unpack("I*", $bytes);
 }
 
@@ -52,7 +58,7 @@ from it and overrides some of the id generation methods.
 
     use Catalyst qw/
         +CatalystX::Plugin::Session::PRNGID
-        Session::Store::FastMmap
+        Session::Store::Dummy
         Session::State::Cookie
     /;
 
@@ -103,6 +109,11 @@ of possible numbers.
 
 This initialises the prng at application startup.
 
+=head2 setup_prng
+
+Initialise the prng.  This is done periodically to add some entropy back into
+the equation.
+
 =cut
 
 my $counter;
@@ -113,6 +124,12 @@ override session_hash_seed => sub
     # this is essentially the same as the existing plugin, just
     # using a prng instead of rand and running it a few more times.
     my @bits = ( ++$counter, time, $c->prng->rand, $$, {}, overload::StrVal($c), );
+    $c->seed_count($c->seed_count+1);
+    if($c->seed_count >= $c->reseed_count)
+    {
+        $c->seed_count(0);
+        $c->setup_prng;
+    }
     for (my $i = 0; $i < $c->iterations; $i++)
     {
         push @bits, $c->prng->rand;
